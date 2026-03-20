@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Periodic Table Master / 원소주기율표 암기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0e1a;--surface:#111827;--card:#1a2236;--border:#2a3a5c;
+    --accent:#00e5ff;--accent2:#ff6b35;--accent3:#a78bfa;
+    --text:#e2e8f0;--muted:#64748b;--success:#22d3a5;--error:#ff4d6d;--warning:#fbbf24;
+    --alkali:#ef4444;--alkali-earth:#f97316;--transition:#eab308;
+    --post-transition:#84cc16;--metalloid:#22d3ee;--nonmetal:#a78bfa;
+    --halogen:#ec4899;--noble:#6366f1;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR','Inter',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body.en{font-family:'Inter','Noto Sans KR',sans-serif;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .container{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:20px;}
+
+  /* 언어 전환 */
+  .lang-switcher{position:fixed;top:14px;right:14px;z-index:999;display:flex;background:var(--surface);border:1px solid var(--border);border-radius:30px;padding:4px;gap:2px;}
+  .lang-btn{padding:6px 14px;border-radius:20px;border:none;cursor:pointer;font-size:0.82rem;font-weight:700;transition:all 0.2s;background:transparent;color:var(--muted);font-family:inherit;}
+  .lang-btn.active{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#000;}
+
+  header{text-align:center;padding:30px 0 16px;}
+  header h1{font-size:clamp(1.6rem,4vw,2.8rem);font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent3),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2;}
+  header p{color:var(--muted);margin-top:8px;font-size:0.88rem;}
+
+  .tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin:18px 0;overflow-x:auto;}
+  .tab-btn{flex:1;min-width:90px;padding:10px 12px;border:none;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:700;transition:all 0.2s;background:transparent;color:var(--muted);white-space:nowrap;font-family:inherit;}
+  .tab-btn.active{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#000;}
+  .tab-btn:hover:not(.active){background:var(--card);color:var(--text);}
+  .tab-content{display:none;}.tab-content.active{display:block;}
+
+  /* 주기율표 */
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--muted);}
+  .legend-dot{width:12px;height:12px;border-radius:3px;}
+  .periodic-table-wrapper{overflow-x:auto;padding-bottom:10px;}
+  .periodic-table{display:grid;grid-template-columns:repeat(18,minmax(52px,1fr));gap:3px;min-width:940px;}
+  .element-cell{aspect-ratio:1;border-radius:6px;border:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;padding:2px;background:var(--card);}
+  .element-cell:hover{transform:scale(1.15);z-index:10;border-color:var(--accent);box-shadow:0 0 16px rgba(0,229,255,0.4);}
+  .element-cell.alkali{border-color:var(--alkali);background:rgba(239,68,68,0.15);}
+  .element-cell.alkali-earth{border-color:var(--alkali-earth);background:rgba(249,115,22,0.15);}
+  .element-cell.transition-metal{border-color:var(--transition);background:rgba(234,179,8,0.12);}
+  .element-cell.post-transition{border-color:var(--post-transition);background:rgba(132,204,22,0.15);}
+  .element-cell.metalloid{border-color:var(--metalloid);background:rgba(34,211,238,0.15);}
+  .element-cell.nonmetal{border-color:var(--nonmetal);background:rgba(167,139,250,0.15);}
+  .element-cell.halogen{border-color:var(--halogen);background:rgba(236,72,153,0.15);}
+  .element-cell.noble-gas{border-color:var(--noble);background:rgba(99,102,241,0.2);}
+  .cell-num{font-size:0.55rem;color:var(--muted);font-family:'JetBrains Mono',monospace;align-self:flex-start;margin-left:3px;}
+  .cell-symbol{font-size:1rem;font-weight:900;line-height:1;}
+  .cell-name{font-size:0.46rem;color:var(--muted);margin-top:1px;text-align:center;}
+  .cell-mass{font-size:0.44rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+  .empty-cell{background:transparent;border:none;cursor:default;}.empty-cell:hover{transform:none;box-shadow:none;}
+
+  /* 모달 */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:30px;max-width:480px;width:100%;position:relative;animation:modalIn 0.2s ease;}
+  @keyframes modalIn{from{opacity:0;transform:scale(0.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+  .modal-close{position:absolute;top:16px;right:16px;background:var(--card);border:1px solid var(--border);color:var(--text);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;}
+  .modal-symbol{font-size:4rem;font-weight:900;text-align:center;line-height:1;}
+  .modal-name{text-align:center;font-size:1.3rem;font-weight:700;margin:8px 0 3px;}
+  .modal-num{text-align:center;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:0.82rem;margin-bottom:18px;}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .info-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;}
+  .info-label{font-size:0.68rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;}
+  .info-value{font-size:1.05rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;margin:2px;}
+  .badge-metal{background:rgba(234,179,8,0.2);color:var(--warning);border:1px solid var(--warning);}
+  .badge-nonmetal{background:rgba(167,139,250,0.2);color:var(--accent3);border:1px solid var(--accent3);}
+  .badge-metalloid{background:rgba(34,211,238,0.2);color:var(--metalloid);border:1px solid var(--metalloid);}
+  .badge-ion{background:rgba(0,229,255,0.15);color:var(--accent);border:1px solid var(--accent);}
+  .badge-noion{background:rgba(100,116,139,0.2);color:var(--muted);border:1px solid var(--muted);}
+
+  /* 플래시카드 */
+  .card-controls{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+  .filter-select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:0.85rem;cursor:pointer;font-family:inherit;}
+  .btn{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:0.85rem;font-weight:700;transition:all 0.2s;font-family:inherit;}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#000;}
+  .btn-secondary{background:var(--card);border:1px solid var(--border);color:var(--text);}
+  .btn:hover{opacity:0.85;transform:translateY(-1px);}
+  .flashcard-area{perspective:1000px;margin:0 auto 20px;max-width:400px;}
+  .flashcard{width:100%;height:260px;position:relative;transform-style:preserve-3d;transition:transform 0.5s;cursor:pointer;}
+  .flashcard.flipped{transform:rotateY(180deg);}
+  .card-front,.card-back{position:absolute;inset:0;border-radius:16px;border:1px solid var(--border);backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+  .card-front{background:var(--card);background-image:radial-gradient(ellipse at top,rgba(0,229,255,0.08),transparent);}
+  .card-back{background:var(--card);background-image:radial-gradient(ellipse at bottom,rgba(167,139,250,0.1),transparent);transform:rotateY(180deg);}
+  .card-symbol-big{font-size:5rem;font-weight:900;line-height:1;}
+  .card-name-big{font-size:1.4rem;font-weight:700;margin-top:8px;}
+  .card-atomic{font-size:0.85rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+  .card-hint{font-size:0.8rem;color:var(--muted);margin-top:12px;}
+  .back-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;font-size:0.82rem;}
+  .back-item{background:rgba(255,255,255,0.05);border-radius:8px;padding:8px 10px;}
+  .back-item .lbl{color:var(--muted);font-size:0.68rem;margin-bottom:2px;}
+  .back-item .val{font-weight:700;font-family:'JetBrains Mono',monospace;}
+  .card-nav{display:flex;align-items:center;justify-content:center;gap:16px;}
+  .nav-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:1.2rem;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
+  .nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .card-counter{font-family:'JetBrains Mono',monospace;font-size:0.9rem;color:var(--muted);min-width:80px;text-align:center;}
+
+  /* 퀴즈 */
+  .quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .score-display{font-family:'JetBrains Mono',monospace;font-size:1rem;}
+  .progress-bar-wrap{background:var(--card);border-radius:4px;height:6px;flex:1;margin:0 16px;}
+  .progress-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width 0.3s;}
+  .quiz-question{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;text-align:center;margin-bottom:20px;}
+  .quiz-q-symbol{font-size:3.5rem;font-weight:900;line-height:1;}
+  .quiz-q-name{font-size:1.5rem;font-weight:700;margin-top:6px;}
+  .quiz-q-text{font-size:1rem;color:var(--muted);margin-top:12px;font-weight:400;}
+  .quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .option-btn{background:var(--card);border:2px solid var(--border);color:var(--text);padding:14px 12px;border-radius:10px;cursor:pointer;font-size:0.9rem;font-weight:700;transition:all 0.15s;text-align:center;font-family:'JetBrains Mono',monospace;}
+  .option-btn:hover:not(:disabled){border-color:var(--accent);background:rgba(0,229,255,0.08);}
+  .option-btn.correct{border-color:var(--success);background:rgba(34,211,165,0.15);color:var(--success);}
+  .option-btn.wrong{border-color:var(--error);background:rgba(255,77,109,0.15);color:var(--error);}
+  .quiz-feedback{text-align:center;padding:12px;border-radius:10px;font-weight:700;margin-bottom:16px;min-height:46px;}
+  .quiz-feedback.correct{background:rgba(34,211,165,0.1);color:var(--success);border:1px solid var(--success);}
+  .quiz-feedback.wrong{background:rgba(255,77,109,0.1);color:var(--error);border:1px solid var(--error);}
+  .quiz-type-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+  .type-chip{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:0.8rem;cursor:pointer;transition:all 0.2s;font-weight:700;font-family:inherit;}
+  .type-chip.active{border-color:var(--accent2);background:rgba(255,107,53,0.15);color:var(--accent2);}
+
+  /* 암기표 */
+  .table-section{margin-bottom:28px;}
+  .section-title{font-size:1rem;font-weight:900;padding:8px 16px;border-radius:8px;margin-bottom:10px;display:inline-flex;align-items:center;gap:8px;}
+  .mem-table{width:100%;border-collapse:collapse;font-size:0.82rem;}
+  .mem-table th{background:var(--card);padding:10px 8px;text-align:center;color:var(--muted);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);}
+  .mem-table td{padding:9px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.04);font-family:'JetBrains Mono',monospace;font-size:0.8rem;}
+  .mem-table tr:hover td{background:rgba(255,255,255,0.03);}
+  .sym{font-weight:900;font-size:1rem;}.kor{font-family:'Noto Sans KR','Inter',sans-serif;font-weight:700;}
+
+  /* 결과 */
+  .result-screen{text-align:center;padding:40px 20px;}
+  .result-score{font-size:5rem;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .result-msg{font-size:1.3rem;font-weight:700;margin:10px 0 20px;}
+  .result-detail{color:var(--muted);margin-bottom:30px;}
+</style>
+</head>
+<body>
+
+<div class="lang-switcher">
+  <button class="lang-btn active" onclick="setLang('ko')" id="btnKo">한국어</button>
+  <button class="lang-btn" onclick="setLang('en')" id="btnEn">English</button>
+</div>
+
+<div class="container">
+  <header>
+    <h1 id="headerTitle">⚗️ 원소주기율표<br>암기 마스터</h1>
+    <p id="headerSub">통합과학 · 화학 — 족 · 주기 · 최외각전자 · 원자가전자 · 이온 · 금속/비금속</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('table',event)" data-ko="📊 주기율표" data-en="📊 Table">📊 주기율표</button>
+    <button class="tab-btn" onclick="switchTab('cards',event)" data-ko="🃏 플래시카드" data-en="🃏 Flashcards">🃏 플래시카드</button>
+    <button class="tab-btn" onclick="switchTab('quiz',event)" data-ko="🎯 퀴즈" data-en="🎯 Quiz">🎯 퀴즈</button>
+    <button class="tab-btn" onclick="switchTab('memo',event)" data-ko="📋 암기표" data-en="📋 Reference">📋 암기표</button>
+  </div>
+
+  <div id="tab-table" class="tab-content active">
+    <div class="legend" id="legendArea"></div>
+    <p id="tableHint" style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;"></p>
+    <div class="periodic-table-wrapper">
+      <div class="periodic-table" id="periodicTable"></div>
+    </div>
+  </div>
+
+  <div id="tab-cards" class="tab-content">
+    <div class="card-controls">
+      <select class="filter-select" id="cardFilter" onchange="initCards()"></select>
+      <button class="btn btn-secondary" onclick="shuffleCards()" id="btnShuffle">🔀 섞기</button>
+      <button class="btn btn-primary" onclick="initCards()" id="btnReset">↺ 처음부터</button>
+    </div>
+    <div class="flashcard-area">
+      <div class="flashcard" id="flashcard" onclick="flipCard()">
+        <div class="card-front" id="cardFront"></div>
+        <div class="card-back" id="cardBack"></div>
+      </div>
+    </div>
+    <div class="card-nav">
+      <button class="nav-btn" onclick="prevCard()">◀</button>
+      <div class="card-counter" id="cardCounter">1 / 1</div>
+      <button class="nav-btn" onclick="nextCard()">▶</button>
+    </div>
+    <p id="cardHint" style="text-align:center;color:var(--muted);font-size:0.8rem;margin-top:10px;"></p>
+  </div>
+
+  <div id="tab-quiz" class="tab-content">
+    <div class="quiz-type-select" id="quizTypes"></div>
+    <div id="quizArea">
+      <div class="quiz-header">
+        <span class="score-display" id="quizScore">0 / 0</span>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="quizProgress" style="width:0%"></div></div>
+        <button class="btn btn-secondary" onclick="startQuiz()" id="btnNewQuiz" style="font-size:0.8rem;padding:6px 12px;"></button>
+      </div>
+      <div class="quiz-question" id="quizQuestion"></div>
+      <div class="quiz-options" id="quizOptions"></div>
+      <div class="quiz-feedback" id="quizFeedback"></div>
+      <div style="text-align:center">
+        <button class="btn btn-primary" id="nextQuizBtn" onclick="nextQuiz()" style="display:none"></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-memo" class="tab-content">
+    <div id="memoContent"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 언어 데이터
+// ============================================================
+let lang = 'ko';
+
+const LANG = {
+  ko: {
+    headerTitle:'⚗️ 원소주기율표<br>암기 마스터',
+    headerSub:'통합과학 · 화학 — 족 · 주기 · 최외각전자 · 원자가전자 · 이온 · 금속/비금속',
+    tableHint:'💡 원소를 클릭하면 상세 정보를 볼 수 있어요',
+    cardHint:'카드를 클릭하면 뒤집어요',
+    btnShuffle:'🔀 섞기', btnReset:'↺ 처음부터', btnNewQuiz:'새 퀴즈',
+    cardFlipHint:'👆 클릭하여 정보 확인',
+    lGroup:'족 (Group)', lPeriod:'주기 (Period)',
+    lOutermost:'최외각전자수', lValence:'원자가전자수',
+    lIon:'이온', lMetal:'금속 여부', lCategory:'원소 분류',
+    lAtomicNum:'원자번호', lAtomicMass:'원자량', lTip:'💡 암기 팁',
+    lClassify:'분류',
+    metal:'금속', nonmetal:'비금속', metalloid:'준금속',
+    noIon:'없음', noIonBadge:'이온 안 됨', ionPrefix:'이온: ',
+    groupSuffix:'족', periodSuffix:'주기', countSuffix:'개',
+    inert:'(비활성)', transitionMetal:'(전이금속)',
+    quizTypes:[
+      {type:'group',label:'족 번호'},{type:'period',label:'주기'},
+      {type:'valence',label:'원자가전자수'},{type:'outermost',label:'최외각전자수'},
+      {type:'ion',label:'이온 종류'},{type:'metalType',label:'금속/비금속'},
+      {type:'category',label:'원소 분류'},
+    ],
+    quizQ:{
+      group:(e)=>`<b>${e.kor} (${e.sym})</b> 는 몇 족인가요?`,
+      period:(e)=>`<b>${e.kor} (${e.sym})</b> 는 몇 주기인가요?`,
+      valence:(e)=>`<b>${e.kor} (${e.sym})</b> 의 원자가전자수는?`,
+      outermost:(e)=>`<b>${e.kor} (${e.sym})</b> 의 최외각전자수는?`,
+      ion:(e)=>`<b>${e.kor} (${e.sym})</b> 이 만드는 이온은?`,
+      metalType:(e)=>`<b>${e.kor} (${e.sym})</b> 는 금속/비금속/준금속 중?`,
+      category:(e)=>`<b>${e.kor} (${e.sym})</b> 의 원소 분류는?`,
+    },
+    periodOptions:['1주기','2주기','3주기','4주기','5주기'],
+    valenceOptions:['0개','1개','2개','3개','4개','5개','6개','7개'],
+    outermostOptions:['1개','2개','3개','4개','5개','6개','7개','8개'],
+    metalOptions:['금속','비금속','준금속'],
+    filterOptions:[
+      {v:'all',l:'전체 원소'},{v:'1',l:'1족 (알칼리금속)'},{v:'2',l:'2족 (알칼리토금속)'},
+      {v:'17',l:'17족 (할로젠)'},{v:'18',l:'18족 (비활성기체)'},
+      {v:'nonmetal',l:'비금속'},{v:'metal',l:'금속'},
+      {v:'period1',l:'1주기'},{v:'period2',l:'2주기'},{v:'period3',l:'3주기'},
+    ],
+    legend:{'alkali':'알칼리금속','alkali-earth':'알칼리토금속','transition-metal':'전이금속','post-transition':'전이후금속','metalloid':'준금속','nonmetal':'비금속','halogen':'할로젠','noble-gas':'비활성기체'},
+    catName:{'alkali':'알칼리금속','alkali-earth':'알칼리토금속','transition-metal':'전이금속','post-transition':'전이후금속','metalloid':'준금속(반금속)','nonmetal':'비금속','halogen':'할로젠','noble-gas':'비활성기체'},
+    quizCorrect:'✅ 정답입니다!',
+    quizWrong:(a)=>`❌ 오답! 정답은 "${a}"`,
+    nextQ:'다음 문제 →', seeResult:'결과 보기 🎉',
+    resultMsgs:['다시 도전해봐요! 💪','조금만 더! 🔥','잘하고 있어요! 👍','거의 다 왔어요! ⭐','완벽해요! 🏆'],
+    resultOf:(c,tot)=>`${tot}문제 중 <b>${c}개</b> 정답`,
+    retryBtn:'다시 도전', homeBtn:'처음으로',
+    memoHeaders:['기호','이름','원자번호','족','주기','최외각전자','원자가전자','이온','금속여부'],
+    memoSections:{alkali:'1족 — 알칼리금속',alkaliEarth:'2족 — 알칼리토금속',mainGroup:'13~18족 (2·3주기)',transition:'전이금속 (주요)',halogen:'할로젠 전체',noble:'비활성기체 전체',rules:'💡 핵심 암기 규칙'},
+    rules:[
+      ['족 = 원자가전자수','1족→1개, 17족→7개. 비활성기체(18족)→0개!'],
+      ['주기 = 전자껍질 수','2주기→껍질 2개, 3주기→껍질 3개'],
+      ['최외각전자','가장 바깥 껍질 전자 수'],
+      ['이온 형성','금속→양이온(+), 비금속→음이온(-). 비활성기체→안 됨'],
+      ['알칼리금속 (1족)','Li Na K → +1이온. 물과 격렬히 반응'],
+      ['할로젠 (17족)','F Cl Br I → -1이온. 이원자 분자'],
+      ['비활성기체 (18족)','He Ne Ar Kr Xe → 이온 안 됨'],
+      ['전이금속','Fe: +2/+3, Cu: +1/+2 가능'],
+    ],
+    getName:(e)=>e.kor,
+  },
+  en: {
+    headerTitle:'⚗️ Periodic Table<br>Master',
+    headerSub:'Chemistry — Group · Period · Outer Electrons · Valence · Ions · Metal/Nonmetal',
+    tableHint:'💡 Click any element for details',
+    cardHint:'Click the card to flip',
+    btnShuffle:'🔀 Shuffle', btnReset:'↺ Restart', btnNewQuiz:'New Quiz',
+    cardFlipHint:'👆 Click to reveal info',
+    lGroup:'Group', lPeriod:'Period',
+    lOutermost:'Outer Electrons', lValence:'Valence Electrons',
+    lIon:'Ion', lMetal:'Metal Type', lCategory:'Category',
+    lAtomicNum:'Atomic No.', lAtomicMass:'Atomic Mass', lTip:'💡 Memory Tip',
+    lClassify:'Classification',
+    metal:'Metal', nonmetal:'Nonmetal', metalloid:'Metalloid',
+    noIon:'None', noIonBadge:'No Ion', ionPrefix:'Ion: ',
+    groupSuffix:'', periodSuffix:'', countSuffix:'',
+    inert:'(inert)', transitionMetal:'(transition)',
+    quizTypes:[
+      {type:'group',label:'Group'},{type:'period',label:'Period'},
+      {type:'valence',label:'Valence e⁻'},{type:'outermost',label:'Outer e⁻'},
+      {type:'ion',label:'Ion'},{type:'metalType',label:'Metal Type'},
+      {type:'category',label:'Category'},
+    ],
+    quizQ:{
+      group:(e)=>`What group is <b>${e.name} (${e.sym})</b>?`,
+      period:(e)=>`What period is <b>${e.name} (${e.sym})</b> in?`,
+      valence:(e)=>`Valence electrons of <b>${e.name} (${e.sym})</b>?`,
+      outermost:(e)=>`Outer shell electrons of <b>${e.name} (${e.sym})</b>?`,
+      ion:(e)=>`What ion does <b>${e.name} (${e.sym})</b> form?`,
+      metalType:(e)=>`Is <b>${e.name} (${e.sym})</b> a metal, nonmetal, or metalloid?`,
+      category:(e)=>`Category of <b>${e.name} (${e.sym})</b>?`,
+    },
+    periodOptions:['Period 1','Period 2','Period 3','Period 4','Period 5'],
+    valenceOptions:['0','1','2','3','4','5','6','7'],
+    outermostOptions:['1','2','3','4','5','6','7','8'],
+    metalOptions:['Metal','Nonmetal','Metalloid'],
+    filterOptions:[
+      {v:'all',l:'All Elements'},{v:'1',l:'Group 1 (Alkali)'},{v:'2',l:'Group 2 (Alk. Earth)'},
+      {v:'17',l:'Group 17 (Halogens)'},{v:'18',l:'Group 18 (Noble Gases)'},
+      {v:'nonmetal',l:'Nonmetals'},{v:'metal',l:'Metals'},
+      {v:'period1',l:'Period 1'},{v:'period2',l:'Period 2'},{v:'period3',l:'Period 3'},
+    ],
+    legend:{'alkali':'Alkali Metal','alkali-earth':'Alkaline Earth','transition-metal':'Transition Metal','post-transition':'Post-transition','metalloid':'Metalloid','nonmetal':'Nonmetal','halogen':'Halogen','noble-gas':'Noble Gas'},
+    catName:{'alkali':'Alkali Metal','alkali-earth':'Alkaline Earth','transition-metal':'Transition Metal','post-transition':'Post-transition Metal','metalloid':'Metalloid','nonmetal':'Nonmetal','halogen':'Halogen','noble-gas':'Noble Gas'},
+    quizCorrect:'✅ Correct!',
+    quizWrong:(a)=>`❌ Wrong! Answer: "${a}"`,
+    nextQ:'Next →', seeResult:'See Results 🎉',
+    resultMsgs:['Keep trying! 💪','Almost! 🔥','Good job! 👍','Nearly perfect! ⭐','Perfect! 🏆'],
+    resultOf:(c,tot)=>`<b>${c}</b> correct out of ${tot}`,
+    retryBtn:'Try Again', homeBtn:'Start Over',
+    memoHeaders:['Symbol','Name','Atomic No.','Group','Period','Outer e⁻','Valence e⁻','Ion','Metal Type'],
+    memoSections:{alkali:'Group 1 — Alkali Metals',alkaliEarth:'Group 2 — Alkaline Earth',mainGroup:'Groups 13–18 (Periods 2–3)',transition:'Transition Metals',halogen:'All Halogens',noble:'All Noble Gases',rules:'💡 Key Rules'},
+    rules:[
+      ['Group = Valence Electrons','Group 1→1e⁻, Group 17→7e⁻. Noble gases (18)→0!'],
+      ['Period = Electron Shells','Period 2→2 shells, Period 3→3 shells'],
+      ['Outer Shell Electrons','Electrons in the outermost shell'],
+      ['Ion Formation','Metals→cation(+), Nonmetals→anion(-). Noble gases→none'],
+      ['Alkali Metals (Group 1)','Li Na K → +1 ion. React violently with water'],
+      ['Halogens (Group 17)','F Cl Br I → -1 ion. Diatomic molecules'],
+      ['Noble Gases (Group 18)','He Ne Ar Kr Xe → No ions. 0 valence electrons'],
+      ['Transition Metals','Fe: +2/+3, Cu: +1/+2 possible'],
+    ],
+    getName:(e)=>e.name,
+  }
+};
+
+function L() { return LANG[lang]; }
+
+// ============================================================
+// 원소 데이터
+// ============================================================
+const EL = [
+  {num:1, sym:'H', kor:'수소',    name:'Hydrogen',   mass:1.008, period:1,group:1,  cat:'nonmetal',       metal:'비금속',val:1,outer:1, ion:'H⁺'},
+  {num:2, sym:'He',kor:'헬륨',    name:'Helium',     mass:4.003, period:1,group:18, cat:'noble-gas',      metal:'비금속',val:0,outer:2, ion:'없음'},
+  {num:3, sym:'Li',kor:'리튬',    name:'Lithium',    mass:6.941, period:2,group:1,  cat:'alkali',         metal:'금속',  val:1,outer:1, ion:'Li⁺'},
+  {num:4, sym:'Be',kor:'베릴륨',  name:'Beryllium',  mass:9.012, period:2,group:2,  cat:'alkali-earth',   metal:'금속',  val:2,outer:2, ion:'Be²⁺'},
+  {num:5, sym:'B', kor:'붕소',    name:'Boron',      mass:10.81, period:2,group:13, cat:'metalloid',      metal:'준금속',val:3,outer:3, ion:'없음'},
+  {num:6, sym:'C', kor:'탄소',    name:'Carbon',     mass:12.01, period:2,group:14, cat:'nonmetal',       metal:'비금속',val:4,outer:4, ion:'없음'},
+  {num:7, sym:'N', kor:'질소',    name:'Nitrogen',   mass:14.01, period:2,group:15, cat:'nonmetal',       metal:'비금속',val:5,outer:5, ion:'N³⁻'},
+  {num:8, sym:'O', kor:'산소',    name:'Oxygen',     mass:16.00, period:2,group:16, cat:'nonmetal',       metal:'비금속',val:6,outer:6, ion:'O²⁻'},
+  {num:9, sym:'F', kor:'플루오린',name:'Fluorine',   mass:19.00, period:2,group:17, cat:'halogen',        metal:'비금속',val:7,outer:7, ion:'F⁻'},
+  {num:10,sym:'Ne',kor:'네온',    name:'Neon',       mass:20.18, period:2,group:18, cat:'noble-gas',      metal:'비금속',val:0,outer:8, ion:'없음'},
+  {num:11,sym:'Na',kor:'나트륨',  name:'Sodium',     mass:22.99, period:3,group:1,  cat:'alkali',         metal:'금속',  val:1,outer:1, ion:'Na⁺'},
+  {num:12,sym:'Mg',kor:'마그네슘',name:'Magnesium',  mass:24.31, period:3,group:2,  cat:'alkali-earth',   metal:'금속',  val:2,outer:2, ion:'Mg²⁺'},
+  {num:13,sym:'Al',kor:'알루미늄',name:'Aluminum',   mass:26.98, period:3,group:13, cat:'post-transition',metal:'금속',  val:3,outer:3, ion:'Al³⁺'},
+  {num:14,sym:'Si',kor:'규소',    name:'Silicon',    mass:28.09, period:3,group:14, cat:'metalloid',      metal:'준금속',val:4,outer:4, ion:'없음'},
+  {num:15,sym:'P', kor:'인',      name:'Phosphorus', mass:30.97, period:3,group:15, cat:'nonmetal',       metal:'비금속',val:5,outer:5, ion:'P³⁻'},
+  {num:16,sym:'S', kor:'황',      name:'Sulfur',     mass:32.07, period:3,group:16, cat:'nonmetal',       metal:'비금속',val:6,outer:6, ion:'S²⁻'},
+  {num:17,sym:'Cl',kor:'염소',    name:'Chlorine',   mass:35.45, period:3,group:17, cat:'halogen',        metal:'비금속',val:7,outer:7, ion:'Cl⁻'},
+  {num:18,sym:'Ar',kor:'아르곤',  name:'Argon',      mass:39.95, period:3,group:18, cat:'noble-gas',      metal:'비금속',val:0,outer:8, ion:'없음'},
+  {num:19,sym:'K', kor:'칼륨',    name:'Potassium',  mass:39.10, period:4,group:1,  cat:'alkali',         metal:'금속',  val:1,outer:1, ion:'K⁺'},
+  {num:20,sym:'Ca',kor:'칼슘',    name:'Calcium',    mass:40.08, period:4,group:2,  cat:'alkali-earth',   metal:'금속',  val:2,outer:2, ion:'Ca²⁺'},
+  {num:26,sym:'Fe',kor:'철',      name:'Iron',       mass:55.85, period:4,group:8,  cat:'transition-metal',metal:'금속', val:2,outer:2, ion:'Fe²⁺/Fe³⁺'},
+  {num:29,sym:'Cu',kor:'구리',    name:'Copper',     mass:63.55, period:4,group:11, cat:'transition-metal',metal:'금속', val:1,outer:1, ion:'Cu⁺/Cu²⁺'},
+  {num:30,sym:'Zn',kor:'아연',    name:'Zinc',       mass:65.38, period:4,group:12, cat:'transition-metal',metal:'금속', val:2,outer:2, ion:'Zn²⁺'},
+  {num:35,sym:'Br',kor:'브로민',  name:'Bromine',    mass:79.90, period:4,group:17, cat:'halogen',        metal:'비금속',val:7,outer:7, ion:'Br⁻'},
+  {num:36,sym:'Kr',kor:'크립톤',  name:'Krypton',    mass:83.80, period:4,group:18, cat:'noble-gas',      metal:'비금속',val:0,outer:8, ion:'없음'},
+  {num:53,sym:'I', kor:'아이오딘',name:'Iodine',     mass:126.9, period:5,group:17, cat:'halogen',        metal:'비금속',val:7,outer:7, ion:'I⁻'},
+  {num:54,sym:'Xe',kor:'제논',    name:'Xenon',      mass:131.3, period:5,group:18, cat:'noble-gas',      metal:'비금속',val:0,outer:8, ion:'없음'},
+];
+
+const CC = {
+  'alkali':'var(--alkali)','alkali-earth':'var(--alkali-earth)','transition-metal':'var(--transition)',
+  'post-transition':'var(--post-transition)','metalloid':'var(--metalloid)','nonmetal':'var(--nonmetal)',
+  'halogen':'var(--halogen)','noble-gas':'var(--noble)'
+};
+
+const TIPS = {
+  ko:{
+    1:'우주의 75%를 차지! 산에서 H⁺ 이온 생성',2:'헬륨풍선 🎈 비활성이라 반응 안 함',
+    3:'리튬배터리의 Li! 1족=+1이온',4:'2족=알칼리토금속. +2이온',
+    5:'붕소, 준금속. 붕산의 성분',6:'유기화학의 핵심. 다이아몬드도 흑연도 탄소!',
+    7:'공기의 78%! 질소비료 필수. N³⁻ 이온',8:'생명의 원소! O²⁻ 이온',
+    9:'가장 강한 산화력! 불소치약. F⁻ 이온',10:'네온사인! 비활성기체. 이온 안 됨',
+    11:'소금(NaCl)의 Na. 물과 격렬히 반응',12:'불꽃반응 흰빛 ✨ +2이온',
+    13:'알루미늄 캔 🥤 가볍고 반응성. +3이온',14:'반도체의 핵심 규소! 준금속',
+    15:'DNA 인산기의 인. P³⁻ 이온',16:'화산의 노란 황. S²⁻ 이온',
+    17:'소독·표백. 17족=할로젠=Cl⁻',18:'용접용 불활성 기체 아르곤',
+    19:'바나나 🍌 의 칼륨. +1이온',20:'뼈와 치아 🦷 의 칼슘. +2이온',
+    26:'철! 녹=Fe₂O₃. +2 또는 +3이온',29:'전선용 구리 ⚡ +1/+2이온',
+    30:'건전지 외장 아연. +2이온',35:'상온 액체 비금속 브로민! Br⁻',
+    36:'크립톤, 비활성기체',53:'갑상선 호르몬 재료 아이오딘. I⁻',54:'자동차 HID 헤드라이트 제논',
+  },
+  en:{
+    1:'75% of the universe! Forms H⁺ in acids',2:'Helium balloons 🎈 Extremely unreactive',
+    3:'In lithium batteries! Group 1 = +1 ion',4:'Group 2 alkaline earth. +2 ion',
+    5:'Boron, metalloid. Found in boric acid',6:'Core of organic chemistry. Diamond & graphite = carbon!',
+    7:'78% of air! Essential fertilizer. N³⁻ ion',8:'Element of life! O²⁻ ion',
+    9:'Strongest oxidizer! In toothpaste. F⁻ ion',10:'Neon signs! Noble gas. Never forms ions',
+    11:'In table salt (NaCl). Reacts violently with water',12:'Bright white flame ✨ +2 ion',
+    13:'Aluminum cans 🥤 Lightweight metal. +3 ion',14:'Heart of semiconductors! Metalloid',
+    15:'In DNA backbone. P³⁻ ion',16:'Yellow volcanic sulfur. S²⁻ ion',
+    17:'Disinfection & bleaching. Halogen = Cl⁻',18:'Argon, used as inert welding gas',
+    19:'Potassium in bananas 🍌 +1 ion',20:'Calcium for bones & teeth 🦷 +2 ion',
+    26:'Iron! Rust = Fe₂O₃. +2 or +3 ion',29:'Copper wiring ⚡ +1 or +2 ion',
+    30:'Zinc in battery casings. +2 ion',35:'Liquid nonmetal at room temp! Br⁻',
+    36:'Krypton, noble gas',53:'Iodine for thyroid hormones. I⁻',54:'Xenon in HID car headlights',
+  }
+};
+
+function ionStr(e) { return e.ion === '없음' ? L().noIon : e.ion; }
+function metalStr(e) {
+  if(e.metal==='금속') return L().metal;
+  if(e.metal==='비금속') return L().nonmetal;
+  return L().metalloid;
+}
+function elName(e) { return L().getName(e); }
+
+// ============================================================
+// 언어 전환
+// ============================================================
+function setLang(l) {
+  lang = l;
+  document.getElementById('btnKo').classList.toggle('active', l==='ko');
+  document.getElementById('btnEn').classList.toggle('active', l==='en');
+  document.body.classList.toggle('en', l==='en');
+  document.getElementById('headerTitle').innerHTML = L().headerTitle;
+  document.getElementById('headerSub').textContent = L().headerSub;
+  document.getElementById('tableHint').textContent = L().tableHint;
+  document.getElementById('cardHint').textContent = L().cardHint;
+  document.getElementById('btnShuffle').textContent = L().btnShuffle;
+  document.getElementById('btnReset').textContent = L().btnReset;
+  document.getElementById('btnNewQuiz').textContent = L().btnNewQuiz;
+  document.querySelectorAll('.tab-btn').forEach(b => b.textContent = b.dataset[l]);
+  const sel = document.getElementById('cardFilter');
+  const prev = sel.value;
+  sel.innerHTML = L().filterOptions.map(o=>`<option value="${o.v}">${o.l}</option>`).join('');
+  sel.value = prev;
+  buildQuizChips();
+  buildLegend();
+  buildPeriodicTable();
+  const activeTab = document.querySelector('.tab-content.active').id.replace('tab-','');
+  if(activeTab==='cards') renderCard();
+  if(activeTab==='quiz') startQuiz();
+  if(activeTab==='memo') buildMemo();
+}
+
+// ============================================================
+// 주기율표
+// ============================================================
+const TABLE_POS = [
+  {n:1,g:1,p:1},{n:2,g:18,p:1},
+  {n:3,g:1,p:2},{n:4,g:2,p:2},{n:5,g:13,p:2},{n:6,g:14,p:2},{n:7,g:15,p:2},{n:8,g:16,p:2},{n:9,g:17,p:2},{n:10,g:18,p:2},
+  {n:11,g:1,p:3},{n:12,g:2,p:3},{n:13,g:13,p:3},{n:14,g:14,p:3},{n:15,g:15,p:3},{n:16,g:16,p:3},{n:17,g:17,p:3},{n:18,g:18,p:3},
+  {n:19,g:1,p:4},{n:20,g:2,p:4},{n:26,g:8,p:4},{n:29,g:11,p:4},{n:30,g:12,p:4},{n:35,g:17,p:4},{n:36,g:18,p:4},
+];
+
+function buildLegend() {
+  const cats = ['alkali','alkali-earth','transition-metal','post-transition','metalloid','nonmetal','halogen','noble-gas'];
+  document.getElementById('legendArea').innerHTML = cats.map(c=>
+    `<div class="legend-item"><div class="legend-dot" style="background:${CC[c]}"></div>${L().legend[c]}</div>`
+  ).join('');
+}
+
+function buildPeriodicTable() {
+  const tbl = document.getElementById('periodicTable');
+  tbl.innerHTML = '';
+  const grid = {};
+  TABLE_POS.forEach(pos => { grid[`${pos.p}-${pos.g}`] = EL.find(e=>e.num===pos.n); });
+  for(let p=1;p<=4;p++) for(let g=1;g<=18;g++) {
+    const el = grid[`${p}-${g}`];
+    const cell = document.createElement('div');
+    if(el) {
+      cell.className = `element-cell ${el.cat}`;
+      cell.innerHTML = `<span class="cell-num">${el.num}</span><span class="cell-symbol" style="color:${CC[el.cat]}">${el.sym}</span><span class="cell-name">${elName(el)}</span><span class="cell-mass">${el.mass}</span>`;
+      cell.onclick = () => showModal(el);
+    } else {
+      cell.className = 'element-cell empty-cell';
+      if(p===4&&g>=3&&g<=7){cell.style.cssText='background:rgba(255,255,255,0.02);font-size:0.5rem;color:var(--muted)';cell.innerHTML=g===5?'…':'';}
+    }
+    tbl.appendChild(cell);
+  }
+}
+
+// ============================================================
+// 모달
+// ============================================================
+function showModal(el) {
+  const c = CC[el.cat];
+  const mClass = el.metal==='금속'?'badge-metal':el.metal==='비금속'?'badge-nonmetal':'badge-metalloid';
+  const hasIon = el.ion !== '없음';
+  const valNote = el.cat==='noble-gas' ? `0 ${L().inert}` : el.cat==='transition-metal' ? `${el.val} ${L().transitionMetal}` : el.val;
+  const tip = TIPS[lang][el.num] || (lang==='ko' ? `${el.kor}은(는) ${el.period}주기 ${el.group}족입니다.` : `${el.name} is in Period ${el.period}, Group ${el.group}.`);
+
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-symbol" style="color:${c}">${el.sym}</div>
+    <div class="modal-name">${el.kor} / ${el.name}</div>
+    <div class="modal-num">${L().lAtomicNum} ${el.num} &nbsp;|&nbsp; ${L().lAtomicMass} ${el.mass}</div>
+    <div class="info-grid">
+      <div class="info-card"><div class="info-label">${L().lGroup}</div><div class="info-value" style="color:${c}">${el.group}${L().groupSuffix}</div></div>
+      <div class="info-card"><div class="info-label">${L().lPeriod}</div><div class="info-value">${el.period}${L().periodSuffix}</div></div>
+      <div class="info-card"><div class="info-label">🔋 ${L().lOutermost}</div><div class="info-value" style="color:var(--accent)">${el.outer}${L().countSuffix}</div></div>
+      <div class="info-card"><div class="info-label">⚡ ${L().lValence}</div><div class="info-value" style="color:var(--accent2)">${valNote}${el.cat!=='noble-gas'&&el.cat!=='transition-metal'?L().countSuffix:''}</div></div>
+      <div class="info-card" style="grid-column:1/-1">
+        <div class="info-label">🏷️ ${L().lClassify}</div>
+        <div style="margin-top:6px">
+          <span class="badge ${mClass}">${metalStr(el)}</span>
+          ${hasIon?`<span class="badge badge-ion">${L().ionPrefix}${ionStr(el)}</span>`:`<span class="badge badge-noion">${L().noIonBadge}</span>`}
+          <span class="badge" style="background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border)">${L().catName[el.cat]}</span>
+        </div>
+      </div>
+      <div class="info-card" style="grid-column:1/-1">
+        <div class="info-label">${L().lTip}</div>
+        <div style="font-size:0.82rem;color:var(--text);line-height:1.6;margin-top:4px;font-family:inherit">${tip}</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if(!e || e.target===document.getElementById('modalOverlay'))
+    document.getElementById('modalOverlay').classList.remove('open');
+}
+
+// ============================================================
+// 플래시카드
+// ============================================================
+let cardList=[], cardIdx=0, cardFlipped=false;
+
+function initCards() {
+  const f = document.getElementById('cardFilter').value;
+  if(f==='all') cardList=[...EL];
+  else if(f==='nonmetal') cardList=EL.filter(e=>e.metal==='비금속');
+  else if(f==='metal') cardList=EL.filter(e=>e.metal==='금속');
+  else if(f.startsWith('period')) cardList=EL.filter(e=>e.period===parseInt(f.replace('period','')));
+  else cardList=EL.filter(e=>e.group===parseInt(f));
+  if(!cardList.length) cardList=[...EL];
+  cardIdx=0; renderCard();
+}
+
+function shuffleCards() {
+  for(let i=cardList.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cardList[i],cardList[j]]=[cardList[j],cardList[i]];}
+  cardIdx=0; renderCard();
+}
+
+function renderCard() {
+  const el=cardList[cardIdx], c=CC[el.cat];
+  cardFlipped=false;
+  document.getElementById('flashcard').classList.remove('flipped');
+  const valNote = el.cat==='noble-gas'?`0 ${L().inert}`:el.val;
+
+  document.getElementById('cardFront').innerHTML = `
+    <div class="card-symbol-big" style="color:${c}">${el.sym}</div>
+    <div class="card-name-big">${elName(el)}</div>
+    <div class="card-atomic">#${el.num} · ${el.mass}</div>
+    <div class="card-hint">${L().cardFlipHint}</div>
+  `;
+  document.getElementById('cardBack').innerHTML = `
+    <div class="back-grid">
+      <div class="back-item"><div class="lbl">${L().lGroup}</div><div class="val" style="color:${c}">${el.group}${L().groupSuffix}</div></div>
+      <div class="back-item"><div class="lbl">${L().lPeriod}</div><div class="val">${el.period}${L().periodSuffix}</div></div>
+      <div class="back-item"><div class="lbl">${L().lOutermost}</div><div class="val" style="color:var(--accent)">${el.outer}${L().countSuffix}</div></div>
+      <div class="back-item"><div class="lbl">${L().lValence}</div><div class="val" style="color:var(--accent2)">${valNote}${el.cat!=='noble-gas'?L().countSuffix:''}</div></div>
+      <div class="back-item"><div class="lbl">${L().lIon}</div><div class="val">${ionStr(el)}</div></div>
+      <div class="back-item"><div class="lbl">${L().lMetal}</div><div class="val" style="font-size:0.7rem;font-family:inherit">${metalStr(el)}</div></div>
+    </div>
+    <div style="font-size:0.7rem;color:var(--muted);margin-top:10px;font-family:inherit">${L().catName[el.cat]}</div>
+  `;
+  document.getElementById('cardCounter').textContent=`${cardIdx+1} / ${cardList.length}`;
+}
+
+function flipCard(){cardFlipped=!cardFlipped;document.getElementById('flashcard').classList.toggle('flipped',cardFlipped);}
+function prevCard(){cardIdx=(cardIdx-1+cardList.length)%cardList.length;renderCard();}
+function nextCard(){cardIdx=(cardIdx+1)%cardList.length;renderCard();}
+
+// ============================================================
+// 퀴즈
+// ============================================================
+let quizType='group', quizQueue=[], quizIdx=0, quizCorrect=0, quizAnswered=false;
+
+function buildQuizChips() {
+  document.getElementById('quizTypes').innerHTML = L().quizTypes.map(qt=>
+    `<div class="type-chip ${qt.type===quizType?'active':''}" data-type="${qt.type}" onclick="selQuizType(this)">${qt.label}</div>`
+  ).join('');
+}
+
+function selQuizType(el) {
+  document.querySelectorAll('.type-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active'); quizType=el.dataset.type; startQuiz();
+}
+
+function startQuiz() {
+  quizQueue=[...EL].sort(()=>Math.random()-0.5);
+  quizIdx=0; quizCorrect=0; quizAnswered=false;
+  document.getElementById('quizScore').textContent='0 / 0';
+  document.getElementById('quizProgress').style.width='0%';
+  document.getElementById('quizFeedback').textContent='';
+  document.getElementById('quizFeedback').className='quiz-feedback';
+  document.getElementById('nextQuizBtn').style.display='none';
+  renderQuiz();
+}
+
+function ansStr(el, type) {
+  switch(type) {
+    case 'group':    return `${el.group}${L().groupSuffix}`;
+    case 'period':   return `${el.period}${L().periodSuffix}`;
+    case 'valence':  return `${el.val}${L().countSuffix}`;
+    case 'outermost':return `${el.outer}${L().countSuffix}`;
+    case 'ion':      return ionStr(el);
+    case 'metalType':return metalStr(el);
+    case 'category': return L().catName[el.cat];
+  }
+}
+
+function allAns(type) {
+  switch(type) {
+    case 'group':    return [...new Set(EL.map(e=>`${e.group}${L().groupSuffix}`))].sort((a,b)=>parseInt(a)-parseInt(b));
+    case 'period':   return L().periodOptions;
+    case 'valence':  return L().valenceOptions;
+    case 'outermost':return L().outermostOptions;
+    case 'ion':      return [...new Set(EL.map(e=>ionStr(e)))];
+    case 'metalType':return L().metalOptions;
+    case 'category': return [...new Set(Object.values(L().catName))];
+  }
+}
+
+function renderQuiz() {
+  if(quizIdx>=quizQueue.length){showResult();return;}
+  const el=quizQueue[quizIdx], c=CC[el.cat], ans=ansStr(el,quizType);
+  document.getElementById('quizQuestion').innerHTML = `
+    <div class="quiz-q-symbol" style="color:${c}">${el.sym}</div>
+    <div class="quiz-q-name">${elName(el)}</div>
+    <div class="quiz-q-text">${L().quizQ[quizType](el)}</div>
+  `;
+  const wrongs = allAns(quizType).filter(a=>a!==ans).sort(()=>Math.random()-0.5).slice(0,3);
+  const choices = [ans,...wrongs].sort(()=>Math.random()-0.5);
+  document.getElementById('quizOptions').innerHTML='';
+  choices.forEach(ch=>{
+    const btn=document.createElement('button');
+    btn.className='option-btn'; btn.textContent=ch;
+    btn.onclick=()=>checkAns(btn,ch,ans);
+    document.getElementById('quizOptions').appendChild(btn);
+  });
+  document.getElementById('quizFeedback').textContent='';
+  document.getElementById('quizFeedback').className='quiz-feedback';
+  document.getElementById('nextQuizBtn').style.display='none';
+  quizAnswered=false;
+}
+
+function checkAns(btn, sel, correct) {
+  if(quizAnswered) return;
+  quizAnswered=true;
+  document.querySelectorAll('.option-btn').forEach(b=>{b.disabled=true;if(b.textContent===correct)b.classList.add('correct');});
+  const fb=document.getElementById('quizFeedback');
+  if(sel===correct){quizCorrect++;btn.classList.add('correct');fb.textContent=L().quizCorrect;fb.className='quiz-feedback correct';}
+  else{btn.classList.add('wrong');fb.textContent=L().quizWrong(correct);fb.className='quiz-feedback wrong';}
+  quizIdx++;
+  document.getElementById('quizScore').textContent=`${quizCorrect} / ${quizIdx}`;
+  document.getElementById('quizProgress').style.width=`${(quizIdx/quizQueue.length)*100}%`;
+  const nBtn=document.getElementById('nextQuizBtn');
+  nBtn.style.display='inline-block';
+  nBtn.textContent=quizIdx>=quizQueue.length?L().seeResult:L().nextQ;
+}
+
+function nextQuiz(){document.getElementById('nextQuizBtn').style.display='none';renderQuiz();}
+
+function showResult() {
+  const pct=Math.round((quizCorrect/quizQueue.length)*100);
+  const msgIdx=Math.min(Math.floor(pct/20),4);
+  document.getElementById('quizArea').innerHTML=`
+    <div class="result-screen">
+      <div class="result-score">${pct}%</div>
+      <div class="result-msg">${L().resultMsgs[msgIdx]}</div>
+      <div class="result-detail">${L().resultOf(quizCorrect,quizQueue.length)}</div>
+      <button class="btn btn-primary" onclick="startQuiz()" style="margin-right:10px">${L().retryBtn}</button>
+      <button class="btn btn-secondary" onclick="location.reload()">${L().homeBtn}</button>
+    </div>
+  `;
+}
+
+// ============================================================
+// 암기표
+// ============================================================
+function buildMemo() {
+  const groups = {
+    alkali:EL.filter(e=>e.group===1&&e.cat==='alkali'),
+    alkaliEarth:EL.filter(e=>e.group===2),
+    mainGroup:EL.filter(e=>e.group>=13&&e.period<=3),
+    transition:EL.filter(e=>e.cat==='transition-metal'),
+    halogen:EL.filter(e=>e.cat==='halogen'),
+    noble:EL.filter(e=>e.cat==='noble-gas'),
+  };
+  const colors={alkali:'var(--alkali)',alkaliEarth:'var(--alkali-earth)',mainGroup:'var(--nonmetal)',transition:'var(--transition)',halogen:'var(--halogen)',noble:'var(--noble)'};
+  let html='';
+  for(const [key,els] of Object.entries(groups)) {
+    if(!els.length) continue;
+    const ths=L().memoHeaders;
+    html+=`<div class="table-section">
+      <div class="section-title" style="background:rgba(255,255,255,0.04);color:${colors[key]};border:1px solid ${colors[key]}">${L().memoSections[key]}</div>
+      <div style="overflow-x:auto"><table class="mem-table">
+        <thead><tr>${ths.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>${els.map(e=>`<tr>
+          <td><span class="sym" style="color:${CC[e.cat]}">${e.sym}</span></td>
+          <td><span class="kor">${elName(e)}</span></td>
+          <td>${e.num}</td>
+          <td style="color:${CC[e.cat]}">${e.group}</td>
+          <td>${e.period}</td>
+          <td style="color:var(--accent)">${e.outer}</td>
+          <td style="color:var(--accent2)">${e.val}</td>
+          <td style="color:var(--success)">${ionStr(e)}</td>
+          <td>${metalStr(e)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`;
+  }
+  html+=`<div class="table-section">
+    <div class="section-title" style="background:rgba(255,255,255,0.04);color:var(--accent);border:1px solid var(--accent)">${L().memoSections.rules}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px">
+      ${L().rules.map(([t,d])=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-weight:700;font-size:0.82rem;color:var(--accent);margin-bottom:6px">${t}</div>
+        <div style="font-size:0.78rem;color:var(--muted);line-height:1.6">${d}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+  document.getElementById('memoContent').innerHTML=html;
+}
+
+// ============================================================
+// 탭 전환
+// ============================================================
+function switchTab(name,event) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if(event) event.target.classList.add('active');
+  if(name==='cards'&&cardList.length===0) initCards();
+  if(name==='quiz'&&quizQueue.length===0) startQuiz();
+  if(name==='memo') buildMemo();
+}
+
+// ============================================================
+// 초기화
+// ============================================================
+buildLegend();
+buildPeriodicTable();
+buildQuizChips();
+
+// 초기 UI 세팅
+document.getElementById('cardFilter').innerHTML = LANG.ko.filterOptions.map(o=>`<option value="${o.v}">${o.l}</option>`).join('');
+document.getElementById('tableHint').textContent = LANG.ko.tableHint;
+document.getElementById('cardHint').textContent = LANG.ko.cardHint;
+document.getElementById('btnShuffle').textContent = LANG.ko.btnShuffle;
+document.getElementById('btnReset').textContent = LANG.ko.btnReset;
+document.getElementById('btnNewQuiz').textContent = LANG.ko.btnNewQuiz;
+
+initCards();
+startQuiz();
+</script>
+</body>
+</html>
